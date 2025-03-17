@@ -107,6 +107,40 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
+        #output-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #output-actions button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #remove-btn {
+            background-color: #ff4d4d;
+            color: #fff;
+        }
+
+        #remove-btn:hover {
+            background-color: #e60000;
+        }
+
+        #download-btn {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        #download-btn:hover {
+            background-color: #45a049;
+        }
+
         footer {
             background-color: #333;
             color: #fff;
@@ -182,6 +216,10 @@
             <input type="range" id="compression-level" min="0" max="1" step="0.1" value="0.5">
             <button id="compress-btn">Compress Image</button>
             <div id="output"></div>
+            <div id="output-actions">
+                <button id="remove-btn" style="display: none;">Remove Image</button>
+                <button id="download-btn" style="display: none;">Download Image</button>
+            </div>
         </section>
 
         <section id="ad-section-bottom">
@@ -204,20 +242,27 @@
 
     <script>
         // JavaScript Functionality
-        document.getElementById('compression-level').addEventListener('input', function() {
+        const imageInput = document.getElementById('image-input');
+        const compressionLevel = document.getElementById('compression-level');
+        const compressBtn = document.getElementById('compress-btn');
+        const output = document.getElementById('output');
+        const removeBtn = document.getElementById('remove-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        let compressedImageBlob = null;
+
+        // Update compression level value
+        compressionLevel.addEventListener('input', function() {
             document.getElementById('compression-value').textContent = this.value;
         });
 
-        document.getElementById('compress-btn').addEventListener('click', function() {
-            const fileInput = document.getElementById('image-input');
-            const compressionLevel = parseFloat(document.getElementById('compression-level').value);
-
-            if (fileInput.files.length === 0) {
+        // Compress image
+        compressBtn.addEventListener('click', function() {
+            if (imageInput.files.length === 0) {
                 alert('Please select an image to compress.');
                 return;
             }
 
-            const file = fileInput.files[0];
+            const file = imageInput.files[0];
             const reader = new FileReader();
 
             reader.onload = function(e) {
@@ -234,15 +279,38 @@
                     ctx.drawImage(img, 0, 0);
 
                     canvas.toBlob(function(blob) {
+                        compressedImageBlob = blob;
                         const compressedImg = document.createElement('img');
                         compressedImg.src = URL.createObjectURL(blob);
-                        document.getElementById('output').innerHTML = '';
-                        document.getElementById('output').appendChild(compressedImg);
-                    }, 'image/jpeg', compressionLevel);
+                        output.innerHTML = '';
+                        output.appendChild(compressedImg);
+
+                        // Show remove and download buttons
+                        removeBtn.style.display = 'inline-block';
+                        downloadBtn.style.display = 'inline-block';
+                    }, 'image/jpeg', parseFloat(compressionLevel.value));
                 };
             };
 
             reader.readAsDataURL(file);
+        });
+
+        // Remove image
+        removeBtn.addEventListener('click', function() {
+            output.innerHTML = '';
+            removeBtn.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            compressedImageBlob = null;
+        });
+
+        // Download image
+        downloadBtn.addEventListener('click', function() {
+            if (compressedImageBlob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(compressedImageBlob);
+                link.download = 'compressed-image.jpg';
+                link.click();
+            }
         });
     </script>
 </body>
